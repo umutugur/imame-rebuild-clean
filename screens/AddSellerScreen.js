@@ -72,6 +72,7 @@ export default function AddSellerScreen() {
         <TextInput
           key={key}
           placeholder={label}
+          placeholderTextColor="#5C4033"
           value={seller[key]}
           onChangeText={(text) => handleChange(key, text)}
           secureTextEntry={key === 'password'}
