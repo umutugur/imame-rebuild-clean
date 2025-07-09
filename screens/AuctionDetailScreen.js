@@ -220,7 +220,7 @@ export default function AuctionDetailScreen({ route }) {
           <Text style={styles.bidButtonText}>{isBidding ? "Gönderiliyor..." : "Teklif Ver"}</Text>
         </TouchableOpacity>
       )}
-
+<Text>Aktif Kullanıcı: {user && user._id}</Text>
       {/* Chat Başlat */}
       {isBuyerWinner && auction.isEnded && (
         <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
