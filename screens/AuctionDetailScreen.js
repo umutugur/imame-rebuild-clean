@@ -26,6 +26,7 @@ export default function AuctionDetailScreen({ route }) {
   const [selectedIncrement, setSelectedIncrement] = useState(10);
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isBidding, setIsBidding] = useState(false);
 
   // ✅ Auction bilgisi yükle
   const fetchAuction = async () => {
@@ -59,10 +60,18 @@ export default function AuctionDetailScreen({ route }) {
 
   // ✅ Teklif verme
   const handleBid = async () => {
-    const newAmount = currentPrice + selectedIncrement;
+    if (!user || user.role !== 'buyer') {
+      Alert.alert("Yetki Hatası", "Sadece alıcılar teklif verebilir.");
+      return;
+    }
+
+    if (!auction || auction.isEnded) {
+      Alert.alert('Uyarı', 'Bu mezat sona ermiş.');
+      return;
+    }
 
     // Adres kontrolü
-    if (user.role === 'buyer' && (!user.address || user.address.trim() === '')) {
+    if (!user.address || user.address.trim() === '') {
       Alert.alert(
         'Adres Gerekli',
         'Teklif verebilmek için profilinize adres bilgisi eklemelisiniz.'
@@ -79,7 +88,10 @@ export default function AuctionDetailScreen({ route }) {
       }
     }
 
+    setIsBidding(true);
+
     try {
+      const newAmount = currentPrice + selectedIncrement;
       const res = await fetch(`https://imame-backend.onrender.com/api/bids`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,6 +110,8 @@ export default function AuctionDetailScreen({ route }) {
       fetchBids();
     } catch (err) {
       Alert.alert('Hata', err.message);
+    } finally {
+      setIsBidding(false);
     }
   };
 
@@ -129,6 +143,17 @@ export default function AuctionDetailScreen({ route }) {
       </View>
     );
   }
+
+  // Mesajlaşma butonu kontrol
+  const isBuyerWinner =
+    user && user.role === 'buyer' && (auction.winnerId === user._id || auction.winner?._id === user._id);
+  const isSellerOfEnded =
+    user &&
+    user.role === 'seller' &&
+    auction.isEnded &&
+    auction.seller &&
+    (auction.seller._id === user._id || auction.seller === user._id) &&
+    auction.winner;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -168,56 +193,75 @@ export default function AuctionDetailScreen({ route }) {
       <Text style={styles.price}>Güncel Fiyat: {String(currentPrice)}₺</Text>
 
       {/* Teklif artışı */}
-      <View style={styles.incrementContainer}>
-        {[10, 20, 30, 40, 50].map((amount) => (
-          <TouchableOpacity
-            key={amount}
-            style={[
-              styles.incrementButton,
-              selectedIncrement === amount && styles.selectedIncrement,
-            ]}
-            onPress={() => setSelectedIncrement(amount)}
-          >
-            <Text style={styles.incrementText}>+{amount}₺</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {user && user.role === 'buyer' && !auction.isEnded && (
+        <View style={styles.incrementContainer}>
+          {[10, 20, 30, 40, 50].map((amount) => (
+            <TouchableOpacity
+              key={amount}
+              style={[
+                styles.incrementButton,
+                selectedIncrement === amount && styles.selectedIncrement,
+              ]}
+              onPress={() => setSelectedIncrement(amount)}
+            >
+              <Text style={styles.incrementText}>+{amount}₺</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* Teklif Ver */}
-      <TouchableOpacity style={styles.bidButton} onPress={handleBid}>
-        <Text style={styles.bidButtonText}>Teklif Ver</Text>
-      </TouchableOpacity>
+      {user && user.role === 'buyer' && !auction.isEnded && (
+        <TouchableOpacity
+          style={[styles.bidButton, isBidding && { opacity: 0.7 }]}
+          onPress={handleBid}
+          disabled={isBidding}
+        >
+          <Text style={styles.bidButtonText}>{isBidding ? "Gönderiliyor..." : "Teklif Ver"}</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Chat Başlat */}
-      {user && (
-        <>
-          {user.role === 'buyer' && auction.winnerId === user._id && (
-            <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
-              <Text style={styles.chatButtonText}>Satıcıyla Mesajlaş</Text>
-            </TouchableOpacity>
-          )}
-          {user.role === 'seller' && auction.winnerId && user._id === auction.seller._id && (
-            <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
-              <Text style={styles.chatButtonText}>Kazanan Alıcıyla Mesajlaş</Text>
-            </TouchableOpacity>
-          )}
-        </>
+      {isBuyerWinner && auction.isEnded && (
+        <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
+          <Text style={styles.chatButtonText}>Satıcıyla Mesajlaş</Text>
+        </TouchableOpacity>
+      )}
+      {isSellerOfEnded && (
+        <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
+          <Text style={styles.chatButtonText}>Kazanan Alıcıyla Mesajlaş</Text>
+        </TouchableOpacity>
       )}
 
       {/* Teklif geçmişi */}
       <Text style={styles.bidsTitle}>Önceki Teklifler</Text>
-      {bids.length > 0 ? (
-        bids.map((item) => (
-          <View key={item._id} style={styles.bidItem}>
-            <Text style={styles.bidUser}>{String(item.user?.name || 'Anonim')}</Text>
-            <Text style={styles.bidAmount}>{item.amount}₺</Text>
+      <FlatList
+        data={bids}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item, index }) => (
+          <View style={styles.modernBidItem}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {item.user?.name?.[0]?.toUpperCase() || "?"}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bidUserModern}>{item.user?.name || 'Anonim'}</Text>
+              <Text style={styles.bidDate}>
+                {item.createdAt ? new Date(item.createdAt).toLocaleString("tr-TR") : ""}
+              </Text>
+            </View>
+            <View style={styles.amountBadge}>
+              <Text style={styles.amountBadgeText}>{item.amount}₺</Text>
+            </View>
           </View>
-        ))
-      ) : (
-        <Text style={{ color: '#4e342e', fontStyle: 'italic' }}>
-          Henüz teklif yok.
-        </Text>
-      )}
+        )}
+        ListEmptyComponent={
+          <Text style={{ color: '#4e342e', fontStyle: 'italic' }}>
+            Henüz teklif yok.
+          </Text>
+        }
+      />
     </ScrollView>
   );
 }
@@ -266,13 +310,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   bidsTitle: { fontSize: 18, fontWeight: 'bold', color: '#4e342e', marginBottom: 8 },
-  bidItem: {
+  modernBidItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
+    alignItems: 'center',
+    backgroundColor: '#f5eee6',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
-  bidUser: { fontWeight: 'bold', color: '#5d4037' },
-  bidAmount: { color: '#2e7d32' },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#bca37f',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  avatarText: {
+    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 18,
+  },
+  bidUserModern: {
+    fontWeight: 'bold',
+    color: '#5d4037',
+    fontSize: 15,
+  },
+  bidDate: {
+    fontSize: 11,
+    color: '#8d6e63',
+  },
+  amountBadge: {
+    backgroundColor: '#4e342e',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  amountBadgeText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
 });

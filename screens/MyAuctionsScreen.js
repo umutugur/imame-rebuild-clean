@@ -1,211 +1,147 @@
-import React, { useEffect, useState, useContext } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Switch } from 'react-native';
+import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
-const screenWidth = Dimensions.get('window').width;
-
-export default function AuctionDetailScreen({ route }) {
-  const { auctionId } = route.params;
+export default function MyAuctionsScreen({ navigation }) {
   const { user } = useContext(AuthContext);
-
-  const [auction, setAuction] = useState(null);
-  const [currentPrice, setCurrentPrice] = useState(0);
-  const [selectedIncrement, setSelectedIncrement] = useState(10);
-  const [bids, setBids] = useState([]);
+  const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAuction = async () => {
+  // Checkbox state
+  const [showOngoing, setShowOngoing] = useState(true);
+  const [showEnded, setShowEnded] = useState(true);
+
+  useEffect(() => {
+    fetchMyAuctions();
+  }, []);
+
+  const fetchMyAuctions = async () => {
     try {
-      const res = await fetch(`https://imame-backend.onrender.com/api/auctions/${auctionId}`);
-      const data = await res.json();
-      setAuction(data);
-      setCurrentPrice(data.currentPrice || data.startingPrice);
+      const res = await axios.get(`https://imame-backend.onrender.com/api/auctions/seller/${user._id}`);
+      setAuctions(res.data);
     } catch (err) {
-      Alert.alert('Hata', 'Mezat bilgisi alınamadı');
+      console.error('Mezatlar alınamadı:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchBids = async () => {
-    try {
-      const res = await fetch(`https://imame-backend.onrender.com/api/bids/${auctionId}`);
-      const data = await res.json();
-      setBids(data);
-    } catch (err) {
-      Alert.alert('Hata', 'Teklifler yüklenemedi');
-    }
-  };
+  // Filtrelenmiş mezatlar
+  const filteredAuctions = auctions.filter(item => {
+    if (item.isEnded && showEnded) return true;
+    if (!item.isEnded && showOngoing) return true;
+    return false;
+  });
 
-  useEffect(() => {
-    fetchAuction();
-    fetchBids();
-  }, []);
+  // Önce devam eden, sonra bitenler sıralanır
+  filteredAuctions.sort((a, b) => {
+    if (a.isEnded === b.isEnded) return 0;
+    return a.isEnded ? 1 : -1;
+  });
 
-  const handleBid = async () => {
-    const newAmount = currentPrice + selectedIncrement;
-
-    // Adres kontrolü (alıcı için)
-    if (user.role === 'buyer' && (!user.address || user.address.trim() === '')) {
-      Alert.alert(
-        'Adres Gerekli',
-        'Teklif verebilmek için profilinize adres bilgisi eklemelisiniz.'
-      );
-      return;
-    }
-
-    if (bids.length > 0) {
-      const lastBidUserId = bids[0].user?._id;
-      if (lastBidUserId === user._id) {
-        Alert.alert("Hatalı İşlem", "Son teklifi zaten siz verdiniz.");
-        return;
-      }
-    }
-
-    try {
-      const res = await fetch(`https://imame-backend.onrender.com/api/bids`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          auctionId,
-          userId: user._id,
-          amount: newAmount,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || 'Teklif başarısız');
-
-      Alert.alert('Tebrikler', `Yeni teklif verdiniz: ${newAmount}₺`);
-      setCurrentPrice(newAmount);
-      fetchBids();
-    } catch (err) {
-      Alert.alert('Hata', err.message);
-    }
-  };
-
-  if (loading || !auction) {
+  // Dekont durumu için renkli işaret
+  const renderStatusDot = (item) => {
+    if (!item.isEnded) return null;
+    // Biten mezat: dekontu onaylandıysa yeşil, aksi halde kırmızı
+    const isApproved = item.receiptStatus === 'approved';
     return (
-      <View style={styles.center}>
+      <View style={[
+        styles.statusDot,
+        { backgroundColor: isApproved ? '#4caf50' : '#c62828' }
+      ]} />
+    );
+  };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('AuctionDetail', { auctionId: item._id })}
+      style={styles.card}
+      activeOpacity={0.95}
+    >
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{item.title}</Text>
+        {renderStatusDot(item)}
+      </View>
+      <Text style={styles.price}>Başlangıç Fiyatı: {item.startingPrice} TL</Text>
+      <Text style={styles.statusText}>{item.isEnded ? "Bitti" : "Devam Ediyor"}</Text>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loader}>
         <ActivityIndicator size="large" color="#6d4c41" />
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Görseller */}
-      <FlatList
-        data={auction.images}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <Image source={{ uri: item }} style={styles.sliderImage} />
-        )}
-        style={styles.sliderContainer}
-      />
-
-      {/* Usta İmzalı Rozeti */}
-      {auction.isSigned && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>✒️ Usta İmzalı</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>Mezatlarım</Text>
+      <View style={styles.checkboxRow}>
+        <View style={styles.checkboxContainer}>
+          <Switch
+            value={showOngoing}
+            onValueChange={setShowOngoing}
+            thumbColor={showOngoing ? '#4caf50' : '#ccc'}
+          />
+          <Text style={styles.checkboxLabel}>Devam Edenler</Text>
         </View>
-      )}
-
-      {/* Bilgiler */}
-      <Text style={styles.title}>{auction.title}</Text>
-      <Text style={styles.seller}>Satıcı: {auction.seller?.companyName || 'Bilinmiyor'}</Text>
-      <Text style={styles.description}>{auction.description}</Text>
-      <Text style={styles.price}>Güncel Fiyat: {currentPrice}₺</Text>
-
-      {/* Teklif artış butonları */}
-      <View style={styles.incrementContainer}>
-        {[10, 20, 30, 40, 50].map((amount) => (
-          <TouchableOpacity
-            key={amount}
-            style={[
-              styles.incrementButton,
-              selectedIncrement === amount && styles.selectedIncrement,
-            ]}
-            onPress={() => setSelectedIncrement(amount)}
-          >
-            <Text style={styles.incrementText}>+{amount}₺</Text>
-          </TouchableOpacity>
-        ))}
+        <View style={styles.checkboxContainer}>
+          <Switch
+            value={showEnded}
+            onValueChange={setShowEnded}
+            thumbColor={showEnded ? '#e53935' : '#ccc'}
+          />
+          <Text style={styles.checkboxLabel}>Bitenler</Text>
+        </View>
       </View>
-
-      {/* Teklif Ver Butonu */}
-      <TouchableOpacity style={styles.bidButton} onPress={handleBid}>
-        <Text style={styles.bidButtonText}>Teklif Ver</Text>
-      </TouchableOpacity>
-
-      {/* Teklif Geçmişi */}
-      <Text style={styles.bidsTitle}>Önceki Teklifler</Text>
-      {bids.length > 0 ? (
-        bids.map((item) => (
-          <View key={item._id} style={styles.bidItem}>
-            <Text style={styles.bidUser}>{item.user?.name || 'Anonim'}</Text>
-            <Text style={styles.bidAmount}>{item.amount}₺</Text>
-          </View>
-        ))
-      ) : (
-        <Text style={{ color: '#4e342e', fontStyle: 'italic' }}>Henüz teklif yok.</Text>
-      )}
-    </ScrollView>
+      <FlatList
+        data={filteredAuctions}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={<Text style={styles.empty}>Kriterlere uygun mezat bulunamadı.</Text>}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#fff8e1' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  sliderContainer: { marginBottom: 12 },
-  sliderImage: {
-    width: Dimensions.get('window').width - 32,
-    height: 240,
+  container: { flex: 1, backgroundColor: '#fff8e1', padding: 16 },
+  header: { fontSize: 22, fontWeight: 'bold', color: '#4e342e', marginBottom: 12 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  checkboxRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 8 },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16 },
+  checkboxLabel: { marginLeft: 4, color: '#6d4c41', fontWeight: 'bold' },
+  list: { paddingBottom: 16 },
+  card: {
+    backgroundColor: '#fff',
     borderRadius: 10,
-    marginRight: 12,
+    padding: 12,
+    marginBottom: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e0c9a6',
   },
-  badge: {
-    backgroundColor: '#4e342e',
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    marginBottom: 8,
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  title: { fontSize: 16, fontWeight: 'bold', color: '#3e2723', flex: 1 },
+  price: { fontSize: 14, color: '#5d4037', marginVertical: 3 },
+  statusText: { fontSize: 13, color: '#8d6e63', marginTop: 2 },
+  statusDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginLeft: 8,
+    marginRight: 2,
+    borderWidth: 1,
+    borderColor: '#fff'
   },
-  badgeText: { color: '#fff', fontWeight: 'bold' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#4e342e', marginBottom: 4 },
-  seller: { fontSize: 16, color: '#6d4c41', marginBottom: 4 },
-  description: { fontSize: 15, color: '#4e342e', marginBottom: 8 },
-  price: { fontSize: 18, fontWeight: 'bold', color: '#2e7d32', marginBottom: 12 },
-  incrementContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  incrementButton: { paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#d7ccc8', borderRadius: 8 },
-  selectedIncrement: { backgroundColor: '#6d4c41' },
-  incrementText: { color: '#fff', fontWeight: 'bold' },
-  bidButton: { backgroundColor: '#4e342e', padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 16 },
-  bidButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  bidsTitle: { fontSize: 18, fontWeight: 'bold', color: '#4e342e', marginBottom: 8 },
-  bidItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
+  empty: {
+    textAlign: 'center',
+    marginTop: 50,
+    fontSize: 16,
+    color: '#666',
   },
-  bidUser: { fontWeight: 'bold', color: '#5d4037' },
-  bidAmount: { color: '#2e7d32' },
 });

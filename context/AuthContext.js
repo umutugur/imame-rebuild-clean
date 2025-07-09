@@ -1,3 +1,4 @@
+// context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,9 +15,10 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const redirectUri = makeRedirectUri({ useProxy: true });
 
-  // 🔹 Bildirim token'ı al
+  // Push notification token kaydı
   const registerForPushNotificationsAsync = async (userId) => {
     try {
       if (!Device.isDevice) return;
@@ -28,7 +30,6 @@ export const AuthProvider = ({ children }) => {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
-
       if (finalStatus !== 'granted') return;
 
       const tokenData = await Notifications.getExpoPushTokenAsync();
@@ -64,23 +65,28 @@ export const AuthProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    const loadUser = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        setUser(parsed);
-        await registerForPushNotificationsAsync(parsed._id); // girişte token kontrolü
-      }
-    };
-    loadUser();
-  }, []);
-
-  useEffect(() => {
     if (responseFacebook?.type === 'success') {
       const { authentication } = responseFacebook;
       handleOAuthLogin('facebook', authentication.accessToken);
     }
   }, [responseFacebook]);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          setUser(parsed);
+          await registerForPushNotificationsAsync(parsed._id);
+        }
+      } catch (err) {
+        setUser(null);
+      }
+      setIsLoading(false);
+    };
+    loadUser();
+  }, []);
 
   const handleOAuthLogin = async (provider, accessToken) => {
     try {
@@ -139,6 +145,7 @@ export const AuthProvider = ({ children }) => {
         promptGoogle,
         promptFacebook,
         updateUser,
+        isLoading,
       }}
     >
       {children}

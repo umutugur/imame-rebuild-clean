@@ -35,8 +35,15 @@ export default function CompletedAuctionsScreen({ navigation }) {
     navigation.navigate('UploadReceipt', { auctionId });
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.auctionItem}>
+  const renderItem = ({ item }) => {
+  const rejected = item.receiptStatus === 'rejected';
+
+  return (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('AuctionDetail', { auctionId: item._id })}
+      style={styles.auctionItem}
+      activeOpacity={0.9}
+    >
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.price}>Kazandığınız Fiyat: {item.currentPrice} TL</Text>
 
@@ -48,7 +55,7 @@ export default function CompletedAuctionsScreen({ navigation }) {
         <Text style={styles.countdown}>⏳ {formatCountdown(item.paymentDeadline)}</Text>
       </View>
 
-      {/* Dekont Durumu */}
+      {/* Dekont durumu */}
       {item.receiptUploaded && (
         <Text style={[
           styles.statusLabel,
@@ -61,8 +68,15 @@ export default function CompletedAuctionsScreen({ navigation }) {
         </Text>
       )}
 
-      {/* Dekont yüklenmediyse buton, yüklendiyse pasif yazı */}
-      {item.receiptUploaded ? (
+      {/* Dekont yükleme seçenekleri */}
+      {rejected ? (
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => handleUploadReceipt(item._id)}
+        >
+          <Text style={styles.uploadButtonText}>Tekrar Dekont Yükle</Text>
+        </TouchableOpacity>
+      ) : item.receiptUploaded ? (
         <Text style={styles.uploadedLabel}>📄 Dekont yüklendi</Text>
       ) : (
         <TouchableOpacity
@@ -72,8 +86,10 @@ export default function CompletedAuctionsScreen({ navigation }) {
           <Text style={styles.uploadButtonText}>Dekont Yükle</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
+};
+
 
   if (loading) {
     return (

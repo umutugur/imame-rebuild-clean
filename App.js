@@ -1,9 +1,8 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ActivityIndicator, View } from 'react-native';
 import OfflineNotice from './components/OfflineNotice';
 
 // Screens
@@ -33,71 +32,26 @@ import TermsAndConditionsScreen from './screens/TermsAndConditionsScreen';
 
 const Stack = createNativeStackNavigator();
 
-// Bildirim davranışı ayarı
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+function MainNavigator() {
+  const { user, isLoading } = useContext(AuthContext);
 
-// Token gönderme hook'u
-const useRegisterPushToken = () => {
-  const { user } = useContext(AuthContext);
+  if (isLoading) {
+    return (
+      <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
+        <ActivityIndicator size="large" color="#6d4c41" />
+      </View>
+    );
+  }
 
-  useEffect(() => {
-    const registerForPushNotificationsAsync = async () => {
-      if (!Device.isDevice) return;
-
-      // Bildirim izinlerini kontrol et
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') return;
-
-      // Expo Push Token al
-      const { data: pushToken } = await Notifications.getExpoPushTokenAsync();
-      console.log("📲 Push Token:", pushToken);
-
-      // Token'ı backend'e kaydet
-      if (user?._id && pushToken) {
-        try {
-          await fetch(`https://imame-backend.onrender.com/api/users/push-token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user._id, token: pushToken }),
-          });
-        } catch (err) {
-          console.error('❌ Push token gönderilemedi:', err);
-        }
-      }
-    };
-
-    registerForPushNotificationsAsync();
-  }, [user]);
-};
-
-
-// Ayrı bileşende hook'u çalıştır
-const PushTokenManager = () => {
-  useRegisterPushToken();
-  return null;
-};
-
-export default function App() {
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <OfflineNotice />
-        <PushTokenManager />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!user ? (
+        <>
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+        </>
+      ) : (
+        <>
           <Stack.Screen name="Main" component={TabNavigator} />
           <Stack.Screen name="AuctionDetail" component={AuctionDetailScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
@@ -119,7 +73,18 @@ export default function App() {
           <Stack.Screen name="MyAuctions" component={MyAuctionsScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           <Stack.Screen name="Terms" component={TermsAndConditionsScreen} />
-        </Stack.Navigator>
+        </>
+      )}
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <OfflineNotice />
+        <MainNavigator />
       </NavigationContainer>
     </AuthProvider>
   );
