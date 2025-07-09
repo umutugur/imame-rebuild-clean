@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       // Backend'e gönder
       await axios.post('https://imame-backend.onrender.com/api/users/update-token', {
         userId,
-        token: expoPushToken,
+        pushToken: expoPushToken,
       });
     } catch (err) {
       console.error('❌ Push token kaydedilemedi:', err.message);
