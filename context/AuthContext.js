@@ -21,27 +21,42 @@ export const AuthProvider = ({ children }) => {
   // Push notification token kaydı
   const registerForPushNotificationsAsync = async (userId) => {
     try {
-      if (!Device.isDevice) return;
+      alert('[DEBUG] registerForPushNotificationsAsync ÇAĞRILDI. userId: ' + userId);
+
+      if (!Device.isDevice) {
+        alert('[DEBUG] Device.isDevice false!');
+        return;
+      }
 
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
+      alert('[DEBUG] Notification status: ' + existingStatus);
+
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
+        alert('[DEBUG] Permission SONUCU: ' + finalStatus);
       }
-      if (finalStatus !== 'granted') return;
+      if (finalStatus !== 'granted') {
+        alert('[DEBUG] Bildirim izni yok, push token alınamadı.');
+        return;
+      }
 
       const tokenData = await Notifications.getExpoPushTokenAsync();
       const expoPushToken = tokenData.data;
-      alert('User id:' +userId, 'Expo Push Token: ' + expoPushToken);
+
+      alert('[DEBUG] Expo Push Token üretildi: ' + expoPushToken);
 
       // Backend'e gönder
-      await axios.post('https://imame-backend.onrender.com/api/users/update-token', {
+      const response = await axios.post('https://imame-backend.onrender.com/api/users/update-token', {
         userId,
         pushToken: expoPushToken,
       });
+
+      alert('[DEBUG] Backend\'e token gönderildi: ' + response.data.message);
     } catch (err) {
+      alert('❌ Push token kaydedilemedi: ' + (err.response?.data?.message || err.message));
       console.error('❌ Push token kaydedilemedi:', err.message);
     }
   };
@@ -75,14 +90,19 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
+        alert('[DEBUG] AsyncStorage user yükleniyor...');
         const storedUser = await AsyncStorage.getItem('user');
         if (storedUser) {
           const parsed = JSON.parse(storedUser);
           setUser(parsed);
+          alert('[DEBUG] AsyncStorage user bulundu! _id: ' + parsed._id);
           await registerForPushNotificationsAsync(parsed._id);
+        } else {
+          alert('[DEBUG] AsyncStorage user YOK!');
         }
       } catch (err) {
         setUser(null);
+        alert('[DEBUG] AsyncStorage loadUser HATA: ' + err.message);
       }
       setIsLoading(false);
     };
@@ -91,6 +111,7 @@ export const AuthProvider = ({ children }) => {
 
   const handleOAuthLogin = async (provider, accessToken) => {
     try {
+      alert('[DEBUG] handleOAuthLogin çağrıldı, provider: ' + provider);
       const res = await axios.post('https://imame-backend.onrender.com/api/auth/social-login', {
         provider,
         accessToken,
@@ -99,18 +120,26 @@ export const AuthProvider = ({ children }) => {
       const userData = res.data.user;
       setUser(userData);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+      alert('[DEBUG] Social login sonrası user._id: ' + userData._id);
       await registerForPushNotificationsAsync(userData._id);
     } catch (err) {
+      alert(`❌ ${provider} login error: ` + (err.response?.data?.message || err.message));
       console.error(`❌ ${provider} login error:`, err.response?.data || err.message);
     }
   };
 
   const login = async (email, password) => {
-    const res = await axios.post('https://imame-backend.onrender.com/api/auth/login', { email, password });
-    const userData = res.data.user;
-    setUser(userData);
-    await AsyncStorage.setItem('user', JSON.stringify(userData));
-    await registerForPushNotificationsAsync(userData._id);
+    try {
+      alert('[DEBUG] Normal login başladı.');
+      const res = await axios.post('https://imame-backend.onrender.com/api/auth/login', { email, password });
+      const userData = res.data.user;
+      setUser(userData);
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      alert('[DEBUG] Normal login sonrası user._id: ' + userData._id);
+      await registerForPushNotificationsAsync(userData._id);
+    } catch (err) {
+      alert('❌ Giriş başarısız: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const logout = async () => {
@@ -133,6 +162,7 @@ export const AuthProvider = ({ children }) => {
       setUser(updatedUser);
       await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (err) {
+      alert('❌ Profil güncelleme hatası: ' + (err.response?.data?.message || err.message));
       console.error('❌ Profil güncelleme hatası:', err.response?.data || err.message);
     }
   };

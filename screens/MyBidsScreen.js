@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import {
-  View, Text, FlatList, StyleSheet, TouchableOpacity, Image, ActivityIndicator
+  View, Text, FlatList, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Alert
 } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
@@ -11,7 +11,9 @@ export default function MyBidsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?._id) fetchBids();
+    if (user?._id) {
+      fetchBids();
+    }
   }, [user]);
 
   const fetchBids = async () => {
@@ -19,46 +21,53 @@ export default function MyBidsScreen({ navigation }) {
       const res = await axios.get(`https://imame-backend.onrender.com/api/bids/user/${user._id}`);
       const allBids = res.data;
 
-      // Grupla: her mezata kendi son teklifin
-      const grouped = allBids.reduce((acc, bid) => {
+      alert('[DEBUG] API\'dan gelen toplam teklif sayısı: ' + allBids.length);
+
+      // Mezata göre grupla, her mezat için hem kendi son teklifini hem de en son teklifi bulalım
+      const grouped = {};
+
+      allBids.forEach((bid) => {
         const auctionId = bid.auction._id.toString();
-        if (!acc[auctionId] || new Date(bid.createdAt) > new Date(acc[auctionId].createdAt)) {
-          acc[auctionId] = bid;
+        if (!grouped[auctionId]) {
+          grouped[auctionId] = { myBid: null, lastBid: null, all: [] };
         }
-        return acc;
-      }, {});
-
-      const auctionIds = Object.keys(grouped);
-
-      const bidsWithStatus = auctionIds.map((auctionId) => {
-        const myBid = grouped[auctionId];
-        const auctionCurrentPrice = myBid.auction.currentPrice || myBid.amount;
-        const allBidsForThisAuction = allBids.filter(b => b.auction._id.toString() === auctionId);
-        const sortedBids = allBidsForThisAuction.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const lastBid = sortedBids[sortedBids.length - 1];
-        const currentUserId = user._id.toString();
-        const isWinner = myBid.auction.winner?.toString() === currentUserId;
-
-        let statusText = isWinner ? 'Kazandınız' : '';
-        let isAfterYou = false;
-
-        if (!isWinner && lastBid && lastBid.user._id.toString() !== currentUserId) {
-          statusText = 'Sizden sonra teklif verildi';
-          isAfterYou = true;
+        grouped[auctionId].all.push(bid);
+        // Kendi verdiği en son teklifi
+        if (bid.user._id === user._id) {
+          if (
+            !grouped[auctionId].myBid ||
+            new Date(bid.createdAt) > new Date(grouped[auctionId].myBid.createdAt)
+          ) {
+            grouped[auctionId].myBid = bid;
+          }
         }
+        // O mezattaki en son teklifi
+        if (
+          !grouped[auctionId].lastBid ||
+          new Date(bid.createdAt) > new Date(grouped[auctionId].lastBid.createdAt)
+        ) {
+          grouped[auctionId].lastBid = bid;
+        }
+      });
 
+      const list = Object.values(grouped).map((grp) => {
+        const isMyBidLast = grp.lastBid.user._id === user._id;
+        const statusText = isMyBidLast
+          ? (grp.myBid.auction.winner?.toString() === user._id.toString() ? 'Kazandınız' : 'Teklif Verildi')
+          : 'Sizden sonra teklif verildi';
         return {
-          ...myBid,
+          ...grp.myBid,
+          auctionCurrentPrice: grp.lastBid.amount, // Güncel fiyat
           statusText,
-          isAfterYou,
-          isWinner,
-          auctionCurrentPrice,
+          isWinner: grp.myBid.auction.winner?.toString() === user._id.toString(),
         };
       });
 
-      setBids(bidsWithStatus);
+      alert('[DEBUG] Ekrana yazılacak teklif kartı sayısı: ' + list.length);
+
+      setBids(list);
     } catch (err) {
-      console.error('Teklifler alınamadı:', err);
+      Alert.alert('Teklifler alınamadı:', err.message);
     } finally {
       setLoading(false);
     }
@@ -70,6 +79,8 @@ export default function MyBidsScreen({ navigation }) {
 
   const renderItem = ({ item }) => {
     const auctionImage = item.auction.images?.[0];
+    const showRed = item.statusText === 'Sizden sonra teklif verildi';
+
     return (
       <TouchableOpacity
         style={styles.bidItem}
@@ -78,29 +89,29 @@ export default function MyBidsScreen({ navigation }) {
         {auctionImage && (
           <Image source={{ uri: auctionImage }} style={styles.auctionImage} />
         )}
-
         <View style={styles.rightContainer}>
-          <Text style={[styles.title]}>{item.auction.title}</Text>
-
+          <Text style={[styles.title, { marginTop: 6 }]}>{item.auction.title}</Text>
+          <Text style={[styles.amount, { marginTop: 6 }]}>
+            {showRed ? item.auctionCurrentPrice : item.amount} TL
+          </Text>
           <Text
             style={[
-              styles.amount,
-              item.isAfterYou ? styles.redAmount : item.isWinner ? styles.greenAmount : styles.normalAmount,
+              styles.status,
+              showRed
+                ? { color: '#d32f2f', fontWeight: 'bold' }
+                : item.isWinner
+                ? { color: '#388e3c' }
+                : { color: '#00796b' },
             ]}
           >
-            {item.isAfterYou ? item.auctionCurrentPrice : item.amount} TL
+            {item.statusText}
           </Text>
-
-          {item.isAfterYou && (
-            <Text style={styles.redWarning}>Sizden sonra teklif verildi</Text>
+          {showRed && (
+            <Text style={styles.redWarning}>Dikkat: Sizden sonra teklif verildi!</Text>
           )}
-          {item.isWinner && (
-            <Text style={styles.greenStatus}>Kazandınız</Text>
-          )}
-
           {item.isWinner && (
             <TouchableOpacity
-              style={styles.uploadButton}
+              style={[styles.uploadButton, { marginTop: 10 }]}
               onPress={() => handleUploadReceipt(item.auction._id)}
             >
               <Text style={styles.uploadText}>Dekont Yükle</Text>
@@ -167,32 +178,14 @@ const styles = StyleSheet.create({
   rightContainer: {
     flex: 1,
   },
-  title: { fontSize: 16, fontWeight: 'bold', color: '#3e2723', marginTop: 6 },
-  amount: { fontSize: 15, fontWeight: 'bold', marginTop: 6 },
-  normalAmount: { color: '#6d4c41' },
-  redAmount: { color: '#d32f2f' },
-  greenAmount: { color: '#388e3c' },
+  title: { fontSize: 16, fontWeight: 'bold', color: '#3e2723' },
+  amount: { fontSize: 14, color: '#6d4c41' },
+  status: { fontSize: 14 },
   redWarning: {
     color: '#d32f2f',
     fontWeight: 'bold',
-    marginTop: 6,
-    fontSize: 14,
-    backgroundColor: '#ffebee',
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  greenStatus: {
-    color: '#388e3c',
-    fontWeight: 'bold',
-    marginTop: 6,
-    fontSize: 14,
-    backgroundColor: '#e8f5e9',
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
+    marginTop: 4,
+    fontSize: 13,
   },
   uploadButton: {
     paddingVertical: 6,
@@ -200,7 +193,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: 110,
     alignItems: 'center',
-    marginTop: 10,
   },
   uploadText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
