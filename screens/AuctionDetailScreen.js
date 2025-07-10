@@ -60,6 +60,7 @@ export default function AuctionDetailScreen({ route }) {
 
   // ✅ Teklif verme
   const handleBid = async () => {
+    Alert.alert('DEBUG', JSON.stringify({ userId: user._id, user, auctionId, currentPrice, selectedIncrement }));
     if (!user || user.role !== 'buyer') {
       Alert.alert("Yetki Hatası", "Sadece alıcılar teklif verebilir.");
       return;
