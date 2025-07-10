@@ -90,10 +90,16 @@ export default function AuctionDetailScreen({ route }) {
     }
 
     setIsBidding(true);
-
+console.log('Teklif gönderiliyor:', {
+  auctionId,
+  userId: user._id,
+  amount: currentPrice + selectedIncrement,
+      });
     try {
       const newAmount = currentPrice + selectedIncrement;
+      Alert.alert("FETCH BAŞLIYOR");
       const res = await fetch(`https://imame-backend.onrender.com/api/bids`, {
+      Alert.alert("FETCH BITTI);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
