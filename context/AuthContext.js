@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }) => {
 
       const tokenData = await Notifications.getExpoPushTokenAsync();
       const expoPushToken = tokenData.data;
+      alert('User id:' +userId, 'Expo Push Token: ' + expoPushToken);
 
       // Backend'e gönder
       await axios.post('https://imame-backend.onrender.com/api/users/update-token', {
