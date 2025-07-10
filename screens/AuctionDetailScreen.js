@@ -28,7 +28,7 @@ export default function AuctionDetailScreen({ route }) {
   const [loading, setLoading] = useState(true);
   const [isBidding, setIsBidding] = useState(false);
 
-  // ✅ Auction bilgisi yükle
+  // Auction bilgisi yükle
   const fetchAuction = async () => {
     try {
       const res = await fetch(`https://imame-backend.onrender.com/api/auctions/${auctionId}`);
@@ -42,7 +42,7 @@ export default function AuctionDetailScreen({ route }) {
     }
   };
 
-  // ✅ Teklifler yükle
+  // Teklifler yükle
   const fetchBids = async () => {
     try {
       const res = await fetch(`https://imame-backend.onrender.com/api/bids/${auctionId}`);
@@ -58,43 +58,39 @@ export default function AuctionDetailScreen({ route }) {
     fetchBids();
   }, []);
 
-  // =============================
-  // TEKLİF VERME DEBUG ALANLARI
-  // =============================
+  // Teklif verme
   const handleBid = async () => {
-    Alert.alert('1. handleBid ÇAĞRILDI', `user: ${JSON.stringify(user)}`);
-    console.log('1. handleBid ÇAĞRILDI', user);
-
     if (!user || user.role !== 'buyer') {
-      Alert.alert('2. Yetki Hatası', `role: ${user?.role}`);
+      Alert.alert("Yetki Hatası", "Sadece alıcılar teklif verebilir.");
       return;
     }
 
     if (!auction || auction.isEnded) {
-      Alert.alert('3. Mezat sona ermiş');
+      Alert.alert('Uyarı', 'Bu mezat sona ermiş.');
       return;
     }
 
     // Adres kontrolü
-    if (!user.address || typeof user.address !== 'object') {
-      Alert.alert('4. Adres Yok', 'Adres nesnesi gelmiyor.');
+    if (!user.address || (typeof user.address === 'string' ? user.address.trim() === '' : false)) {
+      Alert.alert(
+        'Adres Gerekli',
+        'Teklif verebilmek için profilinize adres bilgisi eklemelisiniz.'
+      );
       return;
     }
 
     // Son teklifi veren kontrolü
     if (bids.length > 0) {
-      const lastBidUserId = bids[0]?.user?._id;
+      const lastBidUserId = bids[0].user?._id;
       if (lastBidUserId === user._id) {
-        Alert.alert('5. Son teklifi zaten siz verdiniz.');
+        Alert.alert("Hatalı İşlem", "Son teklifi zaten siz verdiniz.");
         return;
       }
     }
 
     setIsBidding(true);
-    const newAmount = currentPrice + selectedIncrement;
-    Alert.alert('6. Fetch başlıyor', `userId: ${user._id}\namount: ${newAmount}`);
-
     try {
+      const newAmount = currentPrice + selectedIncrement;
       const res = await fetch(`https://imame-backend.onrender.com/api/bids`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -104,25 +100,40 @@ export default function AuctionDetailScreen({ route }) {
           amount: newAmount,
         }),
       });
-      Alert.alert('7. Fetch bitti, response geldi');
 
       const data = await res.json();
-      if (!res.ok) {
-        Alert.alert('8. Teklif başarısız', data.message || 'Teklif başarısız');
-        throw new Error(data.message || 'Teklif başarısız');
-      }
+      if (!res.ok) throw new Error(data.message || 'Teklif başarısız');
 
-      Alert.alert('9. Tebrikler', `Yeni teklif verdiniz: ${newAmount}₺`);
+      Alert.alert('Tebrikler', `Yeni teklif verdiniz: ${newAmount}₺`);
       setCurrentPrice(newAmount);
       fetchBids();
     } catch (err) {
-      Alert.alert('10. Hata', err.message);
+      Alert.alert('Hata', err.message);
     } finally {
       setIsBidding(false);
     }
   };
 
-  // =============================
+  // Chat başlatma
+  const handleStartChat = async () => {
+    try {
+      const res = await fetch('https://imame-backend.onrender.com/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auctionId,
+          userId: user._id,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      navigation.navigate('Chat', { chatId: data.chat._id });
+    } catch (err) {
+      Alert.alert('Hata', err.message);
+    }
+  };
 
   if (loading || !auction) {
     return (
@@ -209,7 +220,6 @@ export default function AuctionDetailScreen({ route }) {
         </TouchableOpacity>
       )}
       <Text>Aktif Kullanıcı: {user && user._id}</Text>
-
       {/* Chat Başlat */}
       {isBuyerWinner && auction.isEnded && (
         <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
@@ -254,8 +264,6 @@ export default function AuctionDetailScreen({ route }) {
     </ScrollView>
   );
 }
-
-// ...styles kısmı aynı kalabilir
 
 const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: '#fff8e1' },
