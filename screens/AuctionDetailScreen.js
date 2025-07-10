@@ -99,7 +99,6 @@ console.log('Teklif gönderiliyor:', {
       const newAmount = currentPrice + selectedIncrement;
       Alert.alert("FETCH BAŞLIYOR");
       const res = await fetch(`https://imame-backend.onrender.com/api/bids`, {
-      Alert.alert("FETCH BITTI);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,6 +107,7 @@ console.log('Teklif gönderiliyor:', {
           amount: newAmount,
         }),
       });
+      Alert.alert("FETCH BITTI");
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Teklif başarısız');
