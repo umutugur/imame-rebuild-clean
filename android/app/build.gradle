@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.imamerebuildclean"
+    namespace "com.umutugur.imame"
     defaultConfig {
-        applicationId "com.imamerebuildclean"
+        applicationId "com.umutugur.imame"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

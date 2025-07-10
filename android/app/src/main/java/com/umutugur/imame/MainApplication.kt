@@ -1,4 +1,4 @@
-package com.imamerebuildclean
+package com.umutugur.imame
 
 import android.app.Application
 import android.content.res.Configuration
