@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
-
+///
 export default function AddAuctionScreen() {
   const { user } = useContext(AuthContext);
   const [title, setTitle] = useState('');
