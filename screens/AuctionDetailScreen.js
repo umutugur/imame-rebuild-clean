@@ -58,46 +58,43 @@ export default function AuctionDetailScreen({ route }) {
     fetchBids();
   }, []);
 
-  // ✅ Teklif verme
+  // =============================
+  // TEKLİF VERME DEBUG ALANLARI
+  // =============================
   const handleBid = async () => {
-    Alert.alert('DEBUG', JSON.stringify({ userId: user._id, user, auctionId, currentPrice, selectedIncrement }));
+    Alert.alert('1. handleBid ÇAĞRILDI', `user: ${JSON.stringify(user)}`);
+    console.log('1. handleBid ÇAĞRILDI', user);
+
     if (!user || user.role !== 'buyer') {
-      Alert.alert("Yetki Hatası", "Sadece alıcılar teklif verebilir.");
+      Alert.alert('2. Yetki Hatası', `role: ${user?.role}`);
       return;
     }
 
     if (!auction || auction.isEnded) {
-      Alert.alert('Uyarı', 'Bu mezat sona ermiş.');
+      Alert.alert('3. Mezat sona ermiş');
       return;
     }
 
     // Adres kontrolü
-    if (!user.address || user.address.trim() === '') {
-      Alert.alert(
-        'Adres Gerekli',
-        'Teklif verebilmek için profilinize adres bilgisi eklemelisiniz.'
-      );
+    if (!user.address || typeof user.address !== 'object') {
+      Alert.alert('4. Adres Yok', 'Adres nesnesi gelmiyor.');
       return;
     }
 
     // Son teklifi veren kontrolü
     if (bids.length > 0) {
-      const lastBidUserId = bids[0].user?._id;
+      const lastBidUserId = bids[0]?.user?._id;
       if (lastBidUserId === user._id) {
-        Alert.alert("Hatalı İşlem", "Son teklifi zaten siz verdiniz.");
+        Alert.alert('5. Son teklifi zaten siz verdiniz.');
         return;
       }
     }
 
     setIsBidding(true);
-console.log('Teklif gönderiliyor:', {
-  auctionId,
-  userId: user._id,
-  amount: currentPrice + selectedIncrement,
-      });
+    const newAmount = currentPrice + selectedIncrement;
+    Alert.alert('6. Fetch başlıyor', `userId: ${user._id}\namount: ${newAmount}`);
+
     try {
-      const newAmount = currentPrice + selectedIncrement;
-      Alert.alert("FETCH BAŞLIYOR");
       const res = await fetch(`https://imame-backend.onrender.com/api/bids`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,41 +104,25 @@ console.log('Teklif gönderiliyor:', {
           amount: newAmount,
         }),
       });
-      Alert.alert("FETCH BITTI");
+      Alert.alert('7. Fetch bitti, response geldi');
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Teklif başarısız');
+      if (!res.ok) {
+        Alert.alert('8. Teklif başarısız', data.message || 'Teklif başarısız');
+        throw new Error(data.message || 'Teklif başarısız');
+      }
 
-      Alert.alert('Tebrikler', `Yeni teklif verdiniz: ${newAmount}₺`);
+      Alert.alert('9. Tebrikler', `Yeni teklif verdiniz: ${newAmount}₺`);
       setCurrentPrice(newAmount);
       fetchBids();
     } catch (err) {
-      Alert.alert('Hata', err.message);
+      Alert.alert('10. Hata', err.message);
     } finally {
       setIsBidding(false);
     }
   };
 
-  // ✅ Chat başlatma
-  const handleStartChat = async () => {
-    try {
-      const res = await fetch('https://imame-backend.onrender.com/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          auctionId,
-          userId: user._id,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      navigation.navigate('Chat', { chatId: data.chat._id });
-    } catch (err) {
-      Alert.alert('Hata', err.message);
-    }
-  };
+  // =============================
 
   if (loading || !auction) {
     return (
@@ -227,7 +208,8 @@ console.log('Teklif gönderiliyor:', {
           <Text style={styles.bidButtonText}>{isBidding ? "Gönderiliyor..." : "Teklif Ver"}</Text>
         </TouchableOpacity>
       )}
-<Text>Aktif Kullanıcı: {user && user._id}</Text>
+      <Text>Aktif Kullanıcı: {user && user._id}</Text>
+
       {/* Chat Başlat */}
       {isBuyerWinner && auction.isEnded && (
         <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
@@ -272,6 +254,8 @@ console.log('Teklif gönderiliyor:', {
     </ScrollView>
   );
 }
+
+// ...styles kısmı aynı kalabilir
 
 const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: '#fff8e1' },
