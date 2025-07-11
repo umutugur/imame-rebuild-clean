@@ -16,7 +16,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const redirectUri = makeRedirectUri({ native: 'imame://redirect' });
+ const redirectUri = makeRedirectUri({ useProxy: true });
 
   // Push notification token kaydı
   const registerForPushNotificationsAsync = async (userId) => {
@@ -63,8 +63,8 @@ export const AuthProvider = ({ children }) => {
 
   const [requestGoogle, responseGoogle, promptGoogle] = Google.useAuthRequest({
     expoClientId: '731274011151-ce78qup9757gfive4bb1rsojnc91sc3b.apps.googleusercontent.com',
-    androidClientId: '731274011151-48vi9247ubv33r23rs41j7nr7d2siv34.apps.googleusercontent.com',
-    webClientId: '731274011151-ce78qup9757gfive4bb1rsojnc91sc3b.apps.googleusercontent.com',
+    androidClientId: '731274011151-suq1e846ecuenurt0lnam9poe8u43o1t.apps.googleusercontent.com',
+    webClientId: '731274011151-nq9i17bc2km1e7uq8utcbk49fkjoahob.apps.googleusercontent.com',
     redirectUri,
   });
 
