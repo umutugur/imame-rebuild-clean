@@ -16,7 +16,12 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
- const redirectUri = makeRedirectUri({ useProxy: true });
+ const redirectUri = makeRedirectUri({
+  scheme: 'imame', // app.config.js içinde 'imame' olarak tanımlı
+  path: 'redirect',
+  useProxy:false
+});
+
 
   // Push notification token kaydı
   const registerForPushNotificationsAsync = async (userId) => {

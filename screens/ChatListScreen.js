@@ -12,8 +12,9 @@ export default function ChatListScreen({ navigation }) {
     const fetchChats = async () => {
       try {
         const res = await fetch(`https://imame-backend.onrender.com/api/chats/user/${user._id}`);
-        const data = await res.json();
-        setChats(data);
+const data = await res.json();
+setChats(data.chats || []);
+
       } catch (err) {
         setChats([]); // Boş liste dön
       } finally {
