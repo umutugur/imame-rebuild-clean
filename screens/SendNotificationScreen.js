@@ -8,8 +8,8 @@ export default function SendNotificationScreen() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
-  const [toBuyers, setToBuyers] = useState(false);
-  const [toSellers, setToSellers] = useState(false);
+  const [toAllBuyers, setToAllBuyers] = useState(false);
+  const [toAllSellers, setToAllSellers] = useState(false);
 
   const handleSend = async () => {
     if (!title || !message) {
@@ -62,11 +62,11 @@ export default function SendNotificationScreen() {
       />
 
       <View style={styles.checkboxContainer}>
-        <CheckBox value={toBuyers} onValueChange={setToBuyers} />
+        <CheckBox value={toAllBuyers} onValueChange={setToAllBuyers} />
         <Text style={styles.checkboxLabel}>Tüm Alıcılara Gönder</Text>
       </View>
       <View style={styles.checkboxContainer}>
-        <CheckBox value={toSellers} onValueChange={setToSellers} />
+        <CheckBox value={toAllSellers} onValueChange={setToAllSellers} />
         <Text style={styles.checkboxLabel}>Tüm Satıcılara Gönder</Text>
       </View>
 
