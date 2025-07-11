@@ -145,14 +145,16 @@ export default function AuctionDetailScreen({ route }) {
 
   // Mesajlaşma butonu kontrol
   const isBuyerWinner =
-    user && user.role === 'buyer' && (auction.winnerId === user._id || auction.winner?._id === user._id);
-  const isSellerOfEnded =
-    user &&
-    user.role === 'seller' &&
-    auction.isEnded &&
-    auction.seller &&
-    (auction.seller._id === user._id || auction.seller === user._id) &&
-    auction.winner;
+  user && user.role === 'buyer' && auction.isEnded &&
+  ((auction.winner && auction.winner._id === user._id) || auction.winner === user._id);
+
+const isSellerOfEnded =
+  user &&
+  user.role === 'seller' &&
+  auction.isEnded &&
+  ((auction.seller && auction.seller._id === user._id) || auction.seller === user._id) &&
+  auction.winner;
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

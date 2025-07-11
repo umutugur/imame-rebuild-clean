@@ -18,7 +18,7 @@ export default function MyAuctionsScreen({ navigation }) {
 
   const fetchMyAuctions = async () => {
     try {
-      const res = await axios.get(`https://imame-backend.onrender.com/api/auctions/seller/${user._id}`);
+      const res = await axios.get(`https://imame-backend.onrender.com/api/auctions/mine/${user._id}`);
       setAuctions(res.data);
     } catch (err) {
       console.error('Mezatlar alınamadı:', err);

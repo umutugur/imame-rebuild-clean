@@ -16,7 +16,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const redirectUri = makeRedirectUri({ useProxy: true });
+  const redirectUri = makeRedirectUri({ native: 'imame://redirect' });
 
   // Push notification token kaydı
   const registerForPushNotificationsAsync = async (userId) => {
