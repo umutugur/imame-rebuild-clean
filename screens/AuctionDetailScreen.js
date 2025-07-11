@@ -115,25 +115,38 @@ export default function AuctionDetailScreen({ route }) {
   };
 
   // Chat başlatma
-  const handleStartChat = async () => {
+const handleStartChat = async () => {
+  try {
+    const res = await fetch('https://imame-backend.onrender.com/api/chats/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        auctionId,
+        buyerId: user._id,
+      }),
+    });
+
+    // Response'u text olarak da logla:
+    const responseText = await res.text();
+    console.log("CHAT BAŞLAT RESPONSE:", responseText);
+
+    // JSON parse etmeye çalış:
+    let data;
     try {
-      const res = await fetch('https://imame-backend.onrender.com/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          auctionId,
-          userId: user._id,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      navigation.navigate('Chat', { chatId: data.chat._id });
-    } catch (err) {
-      Alert.alert('Hata', err.message);
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error("JSON PARSE HATASI:", e);
+      throw new Error('Yanıttan JSON okunamadı: ' + responseText);
     }
-  };
+
+    if (!res.ok) throw new Error(data.message);
+
+    navigation.navigate('Chat', { chatId: data.chat._id });
+  } catch (err) {
+    Alert.alert('Hata', err.message);
+  }
+};
+
 
   if (loading || !auction) {
     return (
