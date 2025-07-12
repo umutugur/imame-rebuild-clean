@@ -22,8 +22,8 @@ export default function SendNotificationScreen() {
         title,
         message,
         email,
-        toBuyers,
-        toSellers,
+        toAllBuyers,
+        toAllSellers,
       });
       Alert.alert('Başarılı', 'Bildirim gönderildi!');
       setTitle('');
