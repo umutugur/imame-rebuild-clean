@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
   const [requestGoogle, responseGoogle, promptGoogle] = Google.useAuthRequest({
     /// expoClientId: '731274011151-ce78qup9757gfive4bb1rsojnc91sc3b.apps.googleusercontent.com',
-    clientId: '731274011151-suq1e846ecuenurt0lnam9poe8u43o1t.apps.googleusercontent.com',
+    androidClientId: '731274011151-suq1e846ecuenurt0lnam9poe8u43o1t.apps.googleusercontent.com',
     /// webClientId: '731274011151-nq9i17bc2km1e7uq8utcbk49fkjoahob.apps.googleusercontent.com',
     redirectUri,
   });
