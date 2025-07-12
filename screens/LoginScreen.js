@@ -47,8 +47,7 @@ const LoginScreen = ({ navigation }) => {
       
       <TouchableOpacity
   style={styles.facebookButton}
-  onPress={() => alert('Facebook ile giriş şu anda devre dışı.')}
->
+  onPress={() => promptFacebook()}>
   <Text style={styles.socialText}>Facebook ile Giriş Yap</Text>
 </TouchableOpacity>
     
