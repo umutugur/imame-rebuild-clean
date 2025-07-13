@@ -13,7 +13,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
-  const { login, googleLogin } = useContext(AuthContext);
+  const { login, promptGoogle } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -57,7 +57,7 @@ const LoginScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Giriş Yap</Text>
           </TouchableOpacity>
-<TouchableOpacity style={styles.googleButton} onPress={() => googleLogin()}>
+<TouchableOpacity style={styles.googleButton} onPress={() => promptGoogle()}>
   <Image source={require('../assets/google-icon.png')} style={styles.googleIcon} />
   <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
 </TouchableOpacity>
