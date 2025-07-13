@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   clientId: '10042514664-hd90v340a3tltvqte7pho0dttfuplio0.apps.googleusercontent.com', // BU DOĞRU ID
   redirectUri: makeRedirectUri({
     scheme: 'imame',
-    useProxy: true,
+    ///useProxy: true,
   }),
 });
 
