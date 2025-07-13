@@ -5,14 +5,16 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Image,
   Alert,
   Switch,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../context/AuthContext';
-///
+
 export default function AddAuctionScreen() {
   const { user } = useContext(AuthContext);
   const [title, setTitle] = useState('');
@@ -83,50 +85,73 @@ export default function AddAuctionScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Mezat Oluştur</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#fff8e1' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Mezat Oluştur</Text>
 
-      <TextInput placeholder="Tesbih Başlığı" style={styles.input} value={title} onChangeText={setTitle} />
-      <TextInput
-        placeholder="Açıklama"
-        style={[styles.input, { height: 100 }]}
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <TextInput
-        placeholder="Başlangıç Fiyatı"
-        style={styles.input}
-        value={startingPrice}
-        onChangeText={setStartingPrice}
-        keyboardType="numeric"
-      />
+        <TextInput
+          placeholder="Tesbih Başlığı"
+          placeholderTextColor="#4e342e"
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+        />
 
-      <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Usta İmzalı</Text>
-        <Switch value={isSigned} onValueChange={setIsSigned} />
-      </View>
+        <TextInput
+          placeholder="Açıklama"
+          placeholderTextColor="#4e342e"
+          style={[styles.input, { height: 100 }]}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
 
-      <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
-        <Text style={styles.pickButtonText}>Fotoğraf Ekle ({images.length}/5)</Text>
-      </TouchableOpacity>
+        <TextInput
+          placeholder="Başlangıç Fiyatı"
+          placeholderTextColor="#4e342e"
+          style={styles.input}
+          value={startingPrice}
+          onChangeText={setStartingPrice}
+          keyboardType="numeric"
+        />
 
-      <View style={styles.imagePreviewContainer}>
-        {images.map((img, idx) => (
-          <Image key={idx} source={{ uri: img.uri }} style={styles.previewImage} />
-        ))}
-      </View>
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Usta İmzalı</Text>
+          <Switch value={isSigned} onValueChange={setIsSigned} />
+        </View>
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Mezatı Kaydet</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
+          <Text style={styles.pickButtonText}>Fotoğraf Ekle ({images.length}/5)</Text>
+        </TouchableOpacity>
+
+        <View style={styles.imagePreviewContainer}>
+          {images.map((img, idx) => (
+            <Image key={idx} source={{ uri: img.uri }} style={styles.previewImage} />
+          ))}
+        </View>
+
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Mezatı Kaydet</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: '#fff8e1' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#4e342e', marginBottom: 16 },
+  container: {
+    padding: 20,
+    backgroundColor: '#fff8e1',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4e342e',
+    marginBottom: 16,
+  },
   input: {
     backgroundColor: '#fff',
     borderColor: '#ccc',
@@ -134,6 +159,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
+    color: '#4e342e',
   },
   switchRow: {
     flexDirection: 'row',

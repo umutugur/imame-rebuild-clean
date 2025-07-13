@@ -1,70 +1,90 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
+} from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
-  const { login, promptGoogle, promptFacebook } = useContext(AuthContext); // Google & Facebook fonksiyonları eklendi
+  const { login, promptGoogle } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     try {
       await login(email, password);
-      navigation.replace('Main'); // Ana sayfaya yönlendir
+      navigation.replace('Main');
     } catch (error) {
-      alert('Giriş başarısız: ' + error.message);
+      console.error('Giriş başarısız:', error.message);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
-      <Text style={styles.title}>Giriş Yap</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#fff8e1' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <Image source={require('../assets/logo.png')} style={styles.logo} />
+          <Text style={styles.title}>Giriş Yap</Text>
 
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        placeholder="Şifre"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor="#4e342e"
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            placeholder="Şifre"
+            placeholderTextColor="#4e342e"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Giriş Yap</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Giriş Yap</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.googleButton} onPress={() => promptGoogle()}>
-        <Text style={styles.socialText}>Google ile Giriş Yap</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-  style={styles.facebookButton}
-  onPress={() => promptFacebook()}>
-  <Text style={styles.socialText}>Facebook ile Giriş Yap</Text>
-</TouchableOpacity>
-    
+          <TouchableOpacity style={styles.googleButton} onPress={() => promptGoogle()}>
+            <Image
+              source={require('../assets/google-icon.png')}
+              style={styles.googleIcon}
+            />
+            <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
+          </TouchableOpacity>
 
-      <View style={styles.registerContainer}>
-        <Text style={styles.registerText}>Hesabın yok mu?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerLink}> Kayıt ol</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Hesabın yok mu?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.registerLink}> Kayıt ol</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -93,6 +113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 15,
     backgroundColor: '#fff',
+    color: '#4e342e',
   },
   button: {
     width: '100%',
@@ -109,25 +130,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
     height: 50,
-    backgroundColor: '#4285F4',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 10,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  facebookButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#3b5998',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 20,
   },
-  socialText: {
-    color: '#fff',
+  googleIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  googleButtonText: {
+    color: '#4e342e',
     fontWeight: 'bold',
     fontSize: 16,
   },

@@ -1,8 +1,10 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Toast from 'react-native-toast-message';
 import { AuthProvider, AuthContext } from './context/AuthContext';
-import { ActivityIndicator, View } from 'react-native';
 import OfflineNotice from './components/OfflineNotice';
 
 // Screens
@@ -80,11 +82,30 @@ function MainNavigator() {
 }
 
 export default function App() {
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      const { title, body } = notification.request.content;
+      console.log('📣 Bildirim alındı:', title, body);
+
+      Toast.show({
+        type: 'success',
+        text1: title || 'Bildirim',
+        text2: body || 'Yeni bir bildirim aldınız.',
+        visibilityTime: 4000,
+        position: 'top'
+      });
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   return (
     <AuthProvider>
       <NavigationContainer>
         <OfflineNotice />
         <MainNavigator />
+        <Toast />
       </NavigationContainer>
     </AuthProvider>
   );

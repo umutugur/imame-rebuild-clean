@@ -29,8 +29,8 @@ export default function SendNotificationScreen() {
       setTitle('');
       setMessage('');
       setEmail('');
-      setToBuyers(false);
-      setToSellers(false);
+      setToAllBuyers(false);
+      setToAllSellers(false);
     } catch (err) {
       Alert.alert('Hata', err.response?.data?.message || 'Bir hata oluştu.');
     }

@@ -21,8 +21,6 @@ export default function MyBidsScreen({ navigation }) {
       const res = await axios.get(`https://imame-backend.onrender.com/api/bids/user/${user._id}`);
       const allBids = res.data;
 
-      alert('[DEBUG] API\'dan gelen toplam teklif sayısı: ' + allBids.length);
-
       // Mezata göre grupla, her mezat için hem kendi son teklifini hem de en son teklifi bulalım
       const grouped = {};
 
@@ -53,17 +51,14 @@ export default function MyBidsScreen({ navigation }) {
       const list = Object.values(grouped).map((grp) => {
         const isMyBidLast = grp.lastBid.user._id === user._id;
         const statusText = isMyBidLast
-          ? (grp.myBid.auction.winner?.toString() === user._id.toString() ? 'Kazandınız' : 'Teklif Verildi')
+          ? 'Teklif Verildi'
           : 'Sizden sonra teklif verildi';
         return {
           ...grp.myBid,
-          auctionCurrentPrice: grp.lastBid.amount, // Güncel fiyat
+          auctionCurrentPrice: grp.lastBid.amount,
           statusText,
-          isWinner: grp.myBid.auction.winner?.toString() === user._id.toString(),
         };
       });
-
-      alert('[DEBUG] Ekrana yazılacak teklif kartı sayısı: ' + list.length);
 
       setBids(list);
     } catch (err) {
@@ -71,10 +66,6 @@ export default function MyBidsScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleUploadReceipt = (auctionId) => {
-    navigation.navigate('UploadReceipt', { auctionId });
   };
 
   const renderItem = ({ item }) => {
@@ -99,8 +90,6 @@ export default function MyBidsScreen({ navigation }) {
               styles.status,
               showRed
                 ? { color: '#d32f2f', fontWeight: 'bold' }
-                : item.isWinner
-                ? { color: '#388e3c' }
                 : { color: '#00796b' },
             ]}
           >
@@ -108,14 +97,6 @@ export default function MyBidsScreen({ navigation }) {
           </Text>
           {showRed && (
             <Text style={styles.redWarning}>Dikkat: Sizden sonra teklif verildi!</Text>
-          )}
-          {item.isWinner && (
-            <TouchableOpacity
-              style={[styles.uploadButton, { marginTop: 10 }]}
-              onPress={() => handleUploadReceipt(item.auction._id)}
-            >
-              <Text style={styles.uploadText}>Dekont Yükle</Text>
-            </TouchableOpacity>
           )}
         </View>
       </TouchableOpacity>
@@ -187,14 +168,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 13,
   },
-  uploadButton: {
-    paddingVertical: 6,
-    backgroundColor: '#6d4c41',
-    borderRadius: 8,
-    width: 110,
-    alignItems: 'center',
-  },
-  uploadText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 16, color: '#999' },
