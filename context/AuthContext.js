@@ -17,12 +17,12 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ Google Auth Request
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: '10042514664-2ogtkaoj8ja49650g17gu6rd084ggejp.apps.googleusercontent.com',
-    redirectUri: makeRedirectUri({
-      scheme: 'imame',
-      useProxy: true,
-    }),
-  });
+  clientId: '10042514664-hd90v340a3tltvqte7pho0dttfuplio0.apps.googleusercontent.com', // BU DOĞRU ID
+  redirectUri: makeRedirectUri({
+    scheme: 'imame',
+    useProxy: true,
+  }),
+});
 
   useEffect(() => {
     if (response?.type === 'success') {
