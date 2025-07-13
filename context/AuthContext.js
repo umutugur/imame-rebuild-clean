@@ -3,9 +3,11 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export const AuthContext = createContext();
 
@@ -13,15 +15,40 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Google Sign-In ayarı (app yüklenirken)
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: '10042514664-hd90v340a3tltvqte7pho0dttfuplio0.apps.googleusercontent.com', // <-- Firebase'den Web Client ID
-      offlineAccess: false,
-    });
-  }, []);
+  // ✅ Google Auth Request
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: '10042514664-2ogtkaoj8ja49650g17gu6rd084ggejp.apps.googleusercontent.com',
+    redirectUri: makeRedirectUri({
+      scheme: 'imame',
+      useProxy: true,
+    }),
+  });
 
-  // ✅ Push bildirim token'ı kaydet
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      handleGoogleAuth(authentication.accessToken);
+    }
+  }, [response]);
+
+  const handleGoogleAuth = async (accessToken) => {
+    try {
+      // Backend'e access token gönder
+      const res = await axios.post('https://imame-backend.onrender.com/api/auth/social-login', {
+        provider: 'google',
+        accessToken,
+      });
+
+      const userData = res.data.user;
+      setUser(userData);
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      await registerForPushNotificationsAsync(userData._id);
+    } catch (err) {
+      console.error('❌ Google auth error:', err.response?.data || err.message);
+    }
+  };
+
+  // ✅ Push token
   const registerForPushNotificationsAsync = async (userId) => {
     try {
       if (!Device.isDevice) return;
@@ -43,35 +70,7 @@ export const AuthProvider = ({ children }) => {
         pushToken: expoPushToken,
       });
     } catch (err) {
-      console.error('Push token kaydedilemedi:', err);
-    }
-  };
-
-  // ✅ Google Login
-  const googleLogin = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-
-      const idToken = userInfo.idToken;
-      const credential = GoogleAuthProvider.credential(idToken);
-
-      const firebaseUserCredential = await signInWithCredential(auth, credential);
-      const firebaseUser = firebaseUserCredential.user;
-
-      // ✅ backend'e kayıt veya giriş
-      const res = await axios.post('https://imame-backend.onrender.com/api/auth/social-login', {
-  idToken,
-});
-
-const userData = res.data.user;
-
-      setUser(userData);
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await registerForPushNotificationsAsync(userData._id);
-
-    } catch (err) {
-      console.error('Google Sign-In hatası:', err);
+      console.error('❌ Push token kaydedilemedi:', err.message);
     }
   };
 
@@ -84,22 +83,15 @@ const userData = res.data.user;
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await registerForPushNotificationsAsync(userData._id);
     } catch (err) {
-      console.error('Giriş başarısız:', err.response?.data || err.message);
+      console.error('❌ Giriş başarısız:', err.response?.data || err.message);
     }
   };
 
-  // ✅ Logout
   const logout = async () => {
-    try {
-      setUser(null);
-      await AsyncStorage.removeItem('user');
-      await GoogleSignin.signOut();
-    } catch (err) {
-      console.error('Google SignOut hatası:', err);
-    }
+    setUser(null);
+    await AsyncStorage.removeItem('user');
   };
 
-  // ✅ Profil güncelle
   const updateUser = async (updatedFields) => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -115,11 +107,10 @@ const userData = res.data.user;
       setUser(updatedUser);
       await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (err) {
-      console.error('Profil güncelleme hatası:', err.response?.data || err.message);
+      console.error('❌ Profil güncelleme hatası:', err.response?.data || err.message);
     }
   };
 
-  // ✅ Local storage'dan kullanıcıyı yükle
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -143,7 +134,7 @@ const userData = res.data.user;
         user,
         login,
         logout,
-        googleLogin,
+        promptGoogle: () => promptAsync(),
         updateUser,
         isLoading,
       }}
