@@ -29,7 +29,7 @@ export default {
           data: [
             {
               scheme: "imame", // Uygulamanızın özel şeması
-              // host: "oauthredirect", // Google Sign-In için bazen gerekli olabilir, ama önce hostsiz deneyelim
+              host: "oauthredirect", // Google Sign-In için bazen gerekli olabilir, ama önce hostsiz deneyelim
             },
           ],
           category: ["BROWSABLE", "DEFAULT"],
