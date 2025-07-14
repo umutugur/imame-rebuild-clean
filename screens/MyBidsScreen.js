@@ -69,7 +69,8 @@ export default function MyBidsScreen({ navigation }) {
   };
 
   const renderItem = ({ item }) => {
-    const auctionImage = item.auction.images?.[0];
+    ///const auctionImage = item.auction.images?.[0];
+    const auctionImage = item?.auction?.images?.length > 0 ? item.auction.images[0] : null;
     const showRed = item.statusText === 'Sizden sonra teklif verildi';
 
     return (
