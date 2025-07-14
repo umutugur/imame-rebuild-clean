@@ -6,7 +6,7 @@ import * as Device from 'expo-device';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 // makeRedirectUri'ye artık ihtiyacımız yok
-// import { makeRedirectUri } from 'expo-auth-session'; // Bu satırı yorum satırı yapın veya silin
+import { makeRedirectUri } from 'expo-auth-session'; // Bu satırı yorum satırı yapın veya silin
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     clientId: '10042514664-hd90v340a3tltvqte7pho0dttfuplio0.apps.googleusercontent.com',
 
     // redirectUri'yi tamamen kaldırıyoruz. Expo'nun ve Google'ın Firebase ile otomatik yönetmesine izin vereceğiz.
-    // redirectUri: makeRedirectUri({ scheme: 'imame', useProxy: true }), // Bu satırı silin veya yorum satırı yapın
+    redirectUri: makeRedirectUri({ scheme: 'imame', useProxy: false }), // Bu satırı silin veya yorum satırı yapın
 
     // Firebase'den alınan Android Client ID'niz
     androidClientId: '10042514664-2ogtkaoj8ja49650g17gu6rd084ggejp.apps.googleusercontent.com',
