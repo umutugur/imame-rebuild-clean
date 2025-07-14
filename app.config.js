@@ -11,8 +11,6 @@ export default {
     },
     main: "index.js",
     platforms: ["android", "ios"],
-    facebookAppId: "100703048183075414",
-    facebookDisplayName: "İmame",
     updates: {
       enabled: false
     },
@@ -24,7 +22,24 @@ export default {
     android: {
       package: "com.umutugur.imame",
       googleServicesFile: "./google-services.json",
-      permissions: ["NOTIFICATIONS"]
+      permissions: ["NOTIFICATIONS"],
+       intentFilters: [
+        {
+          action: "VIEW",
+          data: [
+            {
+              scheme: "imame", // Uygulamanızın özel şeması
+              // host: "oauthredirect", // Google Sign-In için bazen gerekli olabilir, ama önce hostsiz deneyelim
+            },
+          ],
+          category: ["BROWSABLE", "DEFAULT"],
+        },
+      ],
+      // **********************
+    },
+    ios: { // iOS ayarlarını da ekleyelim (eğer varsa)
+      supportsTablet: true,
+      bundleIdentifier: "com.umutugur.imame" // iOS paket adınız, eğer iOS kullanıyorsanız
     }
   }
 };
