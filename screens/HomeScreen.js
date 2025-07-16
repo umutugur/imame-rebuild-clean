@@ -2,12 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
-
-// Banner için gerçek/admob ad unit id'niz. Geliştirirken TestIds.BANNER kullan!
-const adUnitId = __DEV__
-  ? TestIds.BANNER
-  : "ca-app-pub-4306778139267554/1985701713";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -63,19 +57,6 @@ export default function HomeScreen() {
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         contentContainerStyle={styles.list}
       />
-      {/* Google AdMob Banner en altta */}
-      <View style={styles.admobWrapper}>
-        <BannerAd
-          unitId={adUnitId}
-          size={BannerAdSize.SMART_BANNER}
-          requestOptions={{
-            requestNonPersonalizedAdsOnly: true,
-          }}
-          onAdFailedToLoad={error => {
-            console.log('AdMob error:', error);
-          }}
-        />
-      </View>
     </View>
   );
 }
@@ -134,13 +115,4 @@ const styles = StyleSheet.create({
     color: '#6d4c41',
     marginTop: 2,
   },
-  admobWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    backgroundColor: '#fff8e1',
-    paddingBottom: 8,
-  }
 });
