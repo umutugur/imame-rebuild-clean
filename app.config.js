@@ -3,7 +3,7 @@ export default {
     name: "İmame",
     slug: "imame",
     scheme: "imame",
-     icon: "./assets/logo.png",
+    icon: "./assets/logo.png",
     splash: {
       image: "./assets/logo.png",
       resizeMode: "contain",
@@ -22,27 +22,44 @@ export default {
     android: {
       package: "com.umutugur.imame",
       googleServicesFile: "./google-services.json",
-      config: {
-    googleMobileAdsAppId: "ca-app-pub-4306778139267554~1925991963" // AdMob uygulama ID'si (reklam birimi değil!)
-  },
       permissions: ["NOTIFICATIONS"],
-       intentFilters: [
+      intentFilters: [
         {
           action: "VIEW",
           data: [
             {
-              scheme: "imame", // Uygulamanızın özel şeması
-              host: "oauthredirect", // Google Sign-In için bazen gerekli olabilir, ama önce hostsiz deneyelim
+              scheme: "imame",
+              // host: "oauthredirect", // eğer gerekmiyorsa yorumda bırak
             },
           ],
           category: ["BROWSABLE", "DEFAULT"],
         },
       ],
-      // **********************
+      // ⬇️ AdMob App ID'nizi girin!
+      config: {
+        googleMobileAdsAppId: "ca-app-pub-4306778139267554~1925991963"
+      }
     },
-    ios: { // iOS ayarlarını da ekleyelim (eğer varsa)
+    ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.umutugur.imame" // iOS paket adınız, eğer iOS kullanıyorsanız
-    }
+      bundleIdentifier: "com.umutugur.imame"
+      // Gerekirse ios için de AdMob App ID ekleyebilirsin
+    },
+    plugins: [
+      "react-native-google-mobile-ads",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            compileSdkVersion: 34,
+            targetSdkVersion: 34,
+            minSdkVersion: 24,
+          },
+          ios: {
+            deploymentTarget: "13.0",
+          },
+        },
+      ]
+    ]
   }
 };
