@@ -22,6 +22,9 @@ export default {
     android: {
       package: "com.umutugur.imame",
       googleServicesFile: "./google-services.json",
+      config: {
+    googleMobileAdsAppId: "ca-app-pub-4306778139267554~1925991963" // AdMob uygulama ID'si (reklam birimi değil!)
+  },
       permissions: ["NOTIFICATIONS"],
        intentFilters: [
         {

@@ -69,40 +69,50 @@ export default function MyBidsScreen({ navigation }) {
   };
 
   const renderItem = ({ item }) => {
-    ///const auctionImage = item.auction.images?.[0];
-    const auctionImage = item?.auction?.images?.length > 0 ? item.auction.images[0] : null;
-    const showRed = item.statusText === 'Sizden sonra teklif verildi';
+  if (!item || !item.auction) return null; // NULL CHECK!
 
-    return (
-      <TouchableOpacity
-        style={styles.bidItem}
-        onPress={() => navigation.navigate('AuctionDetail', { auctionId: item.auction._id })}
-      >
-        {auctionImage && (
-          <Image source={{ uri: auctionImage }} style={styles.auctionImage} />
+  const auctionImage =
+    item.auction.images && item.auction.images.length > 0
+      ? item.auction.images[0]
+      : null;
+  const showRed = item.statusText === 'Sizden sonra teklif verildi';
+
+  return (
+    <TouchableOpacity
+      style={styles.bidItem}
+      onPress={() =>
+        navigation.navigate('AuctionDetail', { auctionId: item.auction._id })
+      }
+    >
+      {auctionImage && (
+        <Image source={{ uri: auctionImage }} style={styles.auctionImage} />
+      )}
+      <View style={styles.rightContainer}>
+        <Text style={[styles.title, { marginTop: 6 }]}>
+          {item.auction.title}
+        </Text>
+        <Text style={[styles.amount, { marginTop: 6 }]}>
+          {showRed ? item.auctionCurrentPrice : item.amount} TL
+        </Text>
+        <Text
+          style={[
+            styles.status,
+            showRed
+              ? { color: '#d32f2f', fontWeight: 'bold' }
+              : { color: '#00796b' },
+          ]}
+        >
+          {item.statusText}
+        </Text>
+        {showRed && (
+          <Text style={styles.redWarning}>
+            Dikkat: Sizden sonra teklif verildi!
+          </Text>
         )}
-        <View style={styles.rightContainer}>
-          <Text style={[styles.title, { marginTop: 6 }]}>{item.auction.title}</Text>
-          <Text style={[styles.amount, { marginTop: 6 }]}>
-            {showRed ? item.auctionCurrentPrice : item.amount} TL
-          </Text>
-          <Text
-            style={[
-              styles.status,
-              showRed
-                ? { color: '#d32f2f', fontWeight: 'bold' }
-                : { color: '#00796b' },
-            ]}
-          >
-            {item.statusText}
-          </Text>
-          {showRed && (
-            <Text style={styles.redWarning}>Dikkat: Sizden sonra teklif verildi!</Text>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
+      </View>
+    </TouchableOpacity>
+  );
+};
 
   if (loading) {
     return (

@@ -1,20 +1,16 @@
-// firebase.js
 import { initializeApp, getApps } from 'firebase/app';
-import { getStorage } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDFXMBMBzvcRb-iGtXGF3crciOsel-P5Qs",
-  authDomain: "imameapp-6162e.firebaseapp.com",
-  projectId: "imameapp-6162e",
-  storageBucket: "imameapp-6162e.appspot.com",
-  messagingSenderId: "974579367446",
-  appId: "1:974579367446:web:f6bdb864920a9657a27f37"
+  apiKey: "AIzaSyAOj0nXCYgsL7HOxqPkliRa57W_cR_G1WA",
+  authDomain: "imameapp-7e73f.firebaseapp.com",
+  projectId: "imameapp-7e73f",
+  storageBucket: "imameapp-7e73f.appspot.com",
+  messagingSenderId: "10042514664",
+  appId: "1:10042514664:android:7d75241d01341c538b3d5d"
 };
 
-// Uygulamayı başlat
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const auth = getAuth(app);
 
-// Storage servisini başlat
-const storage = getStorage(app);
-
-export { app, storage };
+export { app, auth };

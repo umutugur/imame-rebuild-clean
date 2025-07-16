@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
+import { AdMobBanner } from 'expo-ads-admob';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -53,9 +54,17 @@ export default function HomeScreen() {
         data={auctions}
         renderItem={renderItem}
         keyExtractor={(item) => item._id}
-        numColumns={2} // ✅ 2 sütunlu görünüm
+        numColumns={2}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         contentContainerStyle={styles.list}
+      />
+      {/* AdMob Banner ekranın en altında */}
+      <AdMobBanner
+        bannerSize="smartBannerPortrait"
+        adUnitID="ca-app-pub-4306778139267554/1985701713" // ← Banner Ad Unit ID'n
+        servePersonalizedAds={true}
+        onDidFailToReceiveAdWithError={(err) => console.log('AdMob error:', err)}
+        style={styles.admob}
       />
     </View>
   );
@@ -63,7 +72,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff8e1' },
-  list: { padding: 12 },
+  list: { padding: 12, paddingBottom: 80 }, // Reklamın üstünde boşluk bırakmak için
   card: {
     backgroundColor: '#fff',
     width: '48%',
@@ -82,21 +91,20 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   ribbon: {
-  position: 'absolute',
-  top: 6,
-  right: 6,
-  backgroundColor: '#4e342e',
-  paddingVertical: 4,
-  paddingHorizontal: 8, // artırıldı
-  borderRadius: 6,
-  maxWidth: '90%',      // güvenlik önlemi
-},
-ribbonText: {
-  color: '#fff',
-  fontSize: 12,         // biraz büyütüldü
-  fontWeight: 'bold',
-},
-
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#4e342e',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    maxWidth: '90%',
+  },
+  ribbonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   info: {
     padding: 8,
   },
@@ -116,4 +124,9 @@ ribbonText: {
     color: '#6d4c41',
     marginTop: 2,
   },
+  admob: {
+    alignSelf: 'center',
+    position: 'absolute',
+    bottom: 0,
+  }
 });
