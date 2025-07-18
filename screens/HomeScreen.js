@@ -3,6 +3,9 @@ import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
 
+// ✅ AdMob bileşenleri eklendi
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+
 export default function HomeScreen() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -47,6 +50,11 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  // ✅ Banner reklam birimi
+  const adUnitId = __DEV__
+    ? TestIds.BANNER
+    : 'ca-app-pub-4306778139267554/1985701713';
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -57,13 +65,22 @@ export default function HomeScreen() {
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         contentContainerStyle={styles.list}
       />
+
+      {/* ✅ Reklam en alta */}
+      <View style={styles.adContainer}>
+        <BannerAd
+          unitId={adUnitId}
+          size={BannerAdSize.FULL_BANNER}
+          requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff8e1' },
-  list: { padding: 12, paddingBottom: 80 }, // Reklamın üstünde boşluk bırakmak için
+  list: { padding: 12, paddingBottom: 80 },
   card: {
     backgroundColor: '#fff',
     width: '48%',
@@ -114,5 +131,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6d4c41',
     marginTop: 2,
+  },
+  adContainer: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingBottom: 8,
   },
 });
