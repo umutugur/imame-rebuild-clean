@@ -37,23 +37,21 @@ export default {
       ],
       // **********************
     },
+    plugins: [
+      [
+        "expo-build-properties",
+        {
+          android: {
+            compileSdkVersion: 35,
+            targetSdkVersion: 35,
+            minSdkVersion: 24
+          }
+        }
+      ]
+    ],
     ios: { // iOS ayarlarını da ekleyelim (eğer varsa)
       supportsTablet: true,
       bundleIdentifier: "com.umutugur.imame" // iOS paket adınız, eğer iOS kullanıyorsanız
-    },
-     plugins: [
-  [
-    "expo-build-properties",
-    {
-      android: {
-        compileSdkVersion: 35,
-        targetSdkVersion: 35,
-        minSdkVersion: 24,
-      }
     }
-  ],
-  "react-native-google-mobile-ads"
-]
-
   }
 };
