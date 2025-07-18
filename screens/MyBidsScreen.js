@@ -113,7 +113,7 @@ export default function MyBidsScreen({ navigation }) {
     </TouchableOpacity>
   );
 };
-
+gi
   if (loading) {
     return (
       <View style={styles.loading}>

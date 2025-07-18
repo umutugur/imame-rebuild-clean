@@ -1,4 +1,4 @@
-package com.umutugur.imame
+package com.imame
 
 import android.os.Build
 import android.os.Bundle

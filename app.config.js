@@ -58,10 +58,8 @@ export default {
         }
       ],
       [
-        "react-native-google-mobile-ads",
-        {
-          androidAppId: "ca-app-pub-4306778139267554~1925991963" // 🔥 AdMob plugin için şart
-        }
+        "react-native-google-mobile-ads"
+       
       ]
     ]
   }
